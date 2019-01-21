@@ -36,7 +36,9 @@ MIDDLE = SharedBoard()
 
 
 class Player:
-    def __init__(self, limit_final_field=True):
+    def __init__(self, player_name, limit_final_field=True):
+        self.name = player_name
+
         self.preset = limit_final_field
         self.pool = Counter()  # just a pool of tiles, unordered.
 
@@ -191,7 +193,10 @@ def draw_from_middle(tile):
 
 def get_kind_and_count(counter):
     """"returns the first -and only!- (key, value) pair"""
-    key, value = list(counter.items())[0]
+    try:
+        key, value = list(counter.items())[0]
+    except IndexError:
+        key, value = (None, None)
     return key, value
 
 
@@ -248,14 +253,87 @@ def add_to_round_field(player, row, chosen_tiles):
     pass
 
 
-luke = Player()
-ken = Player()
+def print_plate_state():
+    for i, plate in enumerate(MIDDLE.plates):
+        if len(plate) > 0:
+            print(' Plate {i} contains: \n')
+            for tile, count in plate.items():
+                msg = f'   {count} times {tile} \n'
+                print(msg)
+    pass
 
-draw = draw_from_plate('A', 0)
+
+def print_middle_state():
+    if len(MIDDLE.middle) > 0:
+        print('\n The middle contains: \n')
+        for tile, count in MIDDLE.middle.items():
+            msg = f'   {count} times {tile}'
+            print(msg)
+    else:
+        print(' The middle is empty')
+    pass
 
 
+def print_own_field(round_field):
+    for i, counter in enumerate(round_field):
+        tile, count = get_kind_and_count(counter)
+        if count is None:
+            count = 0
+        filled_tiles = f'[{tile}] ' * count
+        empty_tiles = f'[ ] ' * (i + 1 - count)
+        line = filled_tiles + empty_tiles
+        print(line)
+    pass
+
+
+
+luke = Player(name='Luke')
+ken = Player(name='Ken')
+
+player_names = ['Luke', 'Paula', 'Emil', 'Inga']
+players = [Player(name=name) for name in player_names]
+
+#draw = draw_from_plate('C', 0)
+#add_to_round_field(luke, 0, draw)
+
+
+#draw = draw_from_plate('B', 0)
 # TODO: Simulate a game:
 # while not_empty(middle, plates):
 #   do moves
 # move_to_final_field, count points, etc.
 #
+
+
+player_nr = 0
+current_player = players[player_nr]
+
+tiles_left = True
+while tiles_left:
+
+    print_plate_state()
+    print_middle_state()
+    print('---')
+    print(f"{current_player.name}, it's your turn.. ")
+
+    print(f'Your plate looks like: \n')
+    print_own_field(current_player.round_field)
+
+    plate_nr = input('Which plate would you like to draw from? \n > ')
+    tile_type = input('And which tile would you like to take? \n > ')
+
+    draw = draw_from_plate(tile_type, plate_nr)
+
+
+    empty_middle = (len(MIDDLE.middle) == 0)
+    empty_plates = all(len(plate) == 0 for plate in MIDDLE.plates)
+    tiles_left = ~(empty_middle & empty_plates)
+
+    player_nr += 1
+    try:
+        current_player = players[player_nr]
+    except IndexError:
+        player_nr = 0
+        current_player = players[player_nr]
+
+
