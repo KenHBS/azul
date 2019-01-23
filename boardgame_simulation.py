@@ -157,7 +157,9 @@ def draw_from_plate(tile, plate):
     :param tile: str, 'A' - 'E'
     :param plate: int, plate identifier in range(8)
     """
+    plate = int(plate)
     tile = str(tile)
+
     counter = MIDDLE.plates[plate]
     if counter[tile] == 0:
         msg = f'Plate {plate} does not contain tile {tile}. ' \
@@ -250,52 +252,49 @@ def add_to_round_field(player, row, chosen_tiles):
         new_counter = handle_slots_exceeded(player, max_slots, new_count, new_kind)
 
     player.round_field[int(row)] = new_counter
-    pass
+
+    return player.round_field
 
 
 def print_plate_state():
     for i, plate in enumerate(MIDDLE.plates):
         if len(plate) > 0:
-            print(' Plate {i} contains: \n')
+            print(f' Plate {i} contains: ')
             for tile, count in plate.items():
-                msg = f'   {count} times {tile} \n'
+                msg = f'   {tile} ({count}) '
                 print(msg)
     pass
 
 
 def print_middle_state():
     if len(MIDDLE.middle) > 0:
-        print('\n The middle contains: \n')
+        print('\n The middle contains: ')
         for tile, count in MIDDLE.middle.items():
-            msg = f'   {count} times {tile}'
+            msg = f'   {tile} ({count}). '
             print(msg)
     else:
-        print(' The middle is empty')
+        print('\n The middle is empty')
     pass
 
 
 def print_own_field(round_field):
-    for i, counter in enumerate(round_field):
+    for i, counter in round_field:
+
         tile, count = get_kind_and_count(counter)
         if count is None:
             count = 0
         filled_tiles = f'[{tile}] ' * count
-        empty_tiles = f'[ ] ' * (i + 1 - count)
+        empty_tiles = f'[ ] ' * (i - count)
         line = filled_tiles + empty_tiles
         print(line)
     pass
 
 
-
-luke = Player(name='Luke')
-ken = Player(name='Ken')
-
 player_names = ['Luke', 'Paula', 'Emil', 'Inga']
-players = [Player(name=name) for name in player_names]
+players = [Player(player_name=name) for name in player_names]
 
 #draw = draw_from_plate('C', 0)
 #add_to_round_field(luke, 0, draw)
-
 
 #draw = draw_from_plate('B', 0)
 # TODO: Simulate a game:
@@ -319,12 +318,23 @@ while tiles_left:
     print(f'Your plate looks like: \n')
     print_own_field(current_player.round_field)
 
-    plate_nr = input('Which plate would you like to draw from? \n > ')
+    plate_nr = input('Which plate would you like to draw from? Press ENTER for middle \n > ')
+    ## TODO: draw from the middle!
+
     tile_type = input('And which tile would you like to take? \n > ')
 
-    draw = draw_from_plate(tile_type, plate_nr)
+    if plate_nr is None:
+        draw = draw_from_middle(tile_type)
+    else:
+        draw = draw_from_plate(tile_type, plate_nr)
 
+    row = input('Which row would you like to fill this tile on your board?')
 
+    current_player.round_field = add_to_round_field(current_player,
+                                                    row,
+                                                    draw)
+    ## TODO: implement add_to_round_field
+    ## TODO: catch invalid entries - currently 'draw' gets None and messes everything up.
     empty_middle = (len(MIDDLE.middle) == 0)
     empty_plates = all(len(plate) == 0 for plate in MIDDLE.plates)
     tiles_left = ~(empty_middle & empty_plates)
@@ -335,5 +345,3 @@ while tiles_left:
     except IndexError:
         player_nr = 0
         current_player = players[player_nr]
-
-
